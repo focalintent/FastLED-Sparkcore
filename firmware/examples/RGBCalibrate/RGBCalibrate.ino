@@ -38,25 +38,25 @@ void setup() {
    	delay(2000);
 
       // Uncomment one of the following lines for your leds arrangement.
-      // FastLED.addLeds<TM1803, DATA_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<TM1804, DATA_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<TM1809, DATA_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<WS2811, DATA_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<WS2812, DATA_PIN, RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<TM1803, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<TM1804, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<TM1809, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<WS2811, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<WS2812, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
       // FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
       // FastLED.setBrightness(CRGB(255,255,255));
-      // FastLED.addLeds<GW6205, DATA_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<GW6205_400, DATA_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<UCS1903, DATA_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<UCS1903B, DATA_PIN, RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<GW6205, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<GW6205_400, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<UCS1903, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<UCS1903B, DATA_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
 
-      // FastLED.addLeds<WS2801, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<SM16716, RGB>(leds, NUM_LEDS);
-      FastLED.addLeds<LPD8806, 9, 10, RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<WS2801, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<SM16716, NSFastLED::RGB>(leds, NUM_LEDS);
+      FastLED.addLeds<LPD8806, 9, 10, NSFastLED::RGB>(leds, NUM_LEDS);
 
-      // FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<SM16716, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
-      // FastLED.addLeds<LPD8806, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<SM16716, DATA_PIN, CLOCK_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
+      // FastLED.addLeds<LPD8806, DATA_PIN, CLOCK_PIN, NSFastLED::RGB>(leds, NUM_LEDS);
 }
 
 void loop() {
@@ -66,9 +66,7 @@ void loop() {
    leds[3] = CRGB(0,0,255);
    leds[4] = CRGB(0,0,255);
    leds[5] = CRGB(0,0,255);
-   leds[random8()%NUM_LEDS] = CRGB(0,0,0);
    // leds[10] = CRGB(0,0,0);
    FastLED.show();
-   // delay(1000);
-   FastLED.showColor(CRGB::Black);
+   delay(1000);
 }
