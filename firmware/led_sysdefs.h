@@ -13,7 +13,7 @@
 // Include sam/due headers
 #include "platforms/arm/sam/led_sysdefs_arm_sam.h"
 #elif defined(STM32F10X_MD)
-#include "platforms/arm/stm32/led_sysdefs_arm_stm32.h"
+#include "led_sysdefs_arm_stm32.h"
 #else
 // AVR platforms
 #include "platforms/avr/led_sysdefs_avr.h"
