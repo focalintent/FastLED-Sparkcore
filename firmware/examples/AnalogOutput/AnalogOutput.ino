@@ -1,4 +1,5 @@
-#include <FastLED.h>
+#include "FastLED/FastLED.h"
+FASTLED_USING_NAMESPACE;
 
 // Example showing how to use FastLED color functions
 // even when you're NOT using a "pixel-addressible" smart LED strip.

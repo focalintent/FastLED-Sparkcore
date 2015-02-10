@@ -1,4 +1,5 @@
-#include "FastLED.h"
+#include "FastLED/FastLED.h"
+FASTLED_USING_NAMESPACE;
 
 // How many leds in your strip?
 #define NUM_LEDS 64 

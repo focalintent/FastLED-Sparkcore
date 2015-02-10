@@ -13,11 +13,12 @@
 
 #define USE_OCTOWS2811
 #include <OctoWS2811.h>
-#include <FastLED.h>
+#include "FastLED/FastLED.h"
 #include <Audio.h>
 #include <Wire.h>
 #include <SD.h>
 #include <SPI.h>
+FASTLED_USING_NAMESPACE;
 
 // The display size and color to use
 const unsigned int matrix_width = 60;

@@ -3,7 +3,8 @@
 // different pins, each strip getting its own CRGB array to be played with, only this time they're going
 // to be all parts of an array of arrays.
 
-#include "FastLED.h"
+#include "FastLED/FastLED.h"
+FASTLED_USING_NAMESPACE;
 
 #define NUM_STRIPS 3
 #define NUM_LEDS_PER_STRIP 60

@@ -1,5 +1,6 @@
 
 #include <FastSPI_LED2.h>
+FASTLED_USING_NAMESPACE;
 
 const char *getPort(void *portPtr) {
 #ifdef PORTA

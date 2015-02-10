@@ -1,5 +1,6 @@
 #include<SmartMatrix.h>
-#include<FastLED.h>
+#include"FastLED/FastLED.h"
+FASTLED_USING_NAMESPACE;
 
 #define kMatrixWidth  32
 #define kMatrixHeight 32

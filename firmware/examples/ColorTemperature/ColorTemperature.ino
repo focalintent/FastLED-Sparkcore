@@ -1,4 +1,5 @@
-#include <FastLED.h>
+#include "FastLED/FastLED.h"
+FASTLED_USING_NAMESPACE;
 
 #define LED_PIN     3
 

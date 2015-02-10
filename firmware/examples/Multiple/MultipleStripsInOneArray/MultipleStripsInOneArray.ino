@@ -2,7 +2,8 @@
 // using multiple controllers.  In this example, we're going to set up four NEOPIXEL strips on three
 // different pins, each strip will be referring to a different part of the single led array
 
-#include "FastLED.h"
+#include "FastLED/FastLED.h"
+FASTLED_USING_NAMESPACE;
 
 #define NUM_STRIPS 3
 #define NUM_LEDS_PER_STRIP 60
