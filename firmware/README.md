@@ -1,4 +1,16 @@
-IMPORTANT NOTE: For AVR based systems, avr-gcc 4.8.x is supported, as is avr-gcc 4.3 and earlier.  There are known issues with avr-gcc 4.7 and timing based chipsets like the WS2812B.  If you are using a linux system make sure you are using avr-gcc 4.8.x not avr-gcc 4.7.x.
+SPARKCORE Beta Notes
+====================
+
+* Spark Core has a different convention for including header files
+* Spark Core requires libraries to be in namespaces.  This means that in addition to the include, you need to indicate that you're using the namespace:
+
+```
+  #include "FastLED/FastLED.h"
+  FASTLED_USING_NAMESPACE
+```
+* The ```FASTLED_USING_NAMESPACE``` macro will allow your code to work in environments where FastLED is using a namespace vs. places where it isn't.  Also, the name of the namespace isn't finalized.
+
+There may be other tweaks and issues.  Please file issues at http://fastled.io/issues 
 
 
 FastLED 3.0
