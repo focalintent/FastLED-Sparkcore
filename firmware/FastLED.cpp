@@ -110,8 +110,8 @@ void CFastLED::clearData() {
 }
 
 void CFastLED::delay(unsigned long ms) {
-	unsigned long start = millis();
-	while((millis()-start) < ms) {
+	unsigned long start = ::millis();
+	while((::millis()-start) < ms) {
 #ifndef FASTLED_ACCURATE_CLOCK
 		// make sure to allow at least one ms to pass to ensure the clock moves
 		// forward
@@ -192,14 +192,14 @@ extern int noise_max;
 
 void CFastLED::countFPS(int nFrames) {
   static int br = 0;
-  static uint32_t lastframe = 0; // millis();
+  static uint32_t lastframe = 0; // ::millis();
 
   if(br++ >= nFrames) {
-		uint32_t now = millis();
+		uint32_t now = ::millis();
 		now -= lastframe;
 		m_nFPS = (br * 1000) / now;
     br = 0;
-    lastframe = millis();
+    lastframe = ::millis();
   }
 }
 
