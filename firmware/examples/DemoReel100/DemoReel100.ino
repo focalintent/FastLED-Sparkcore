@@ -72,6 +72,13 @@ void rainbow()
   fill_rainbow( leds, NUM_LEDS, gHue, 7);
 }
 
+void addGlitter( fract8 chanceOfGlitter) 
+{
+  if( random8() < chanceOfGlitter) {
+    leds[ random16(NUM_LEDS) ] += CRGB::White;
+  }
+}
+
 void rainbowWithGlitter() 
 {
   // built-in FastLED rainbow, plus some random sparkly glitter
@@ -79,12 +86,6 @@ void rainbowWithGlitter()
   addGlitter(80);
 }
 
-void addGlitter( fract8 chanceOfGlitter) 
-{
-  if( random8() < chanceOfGlitter) {
-    leds[ random16(NUM_LEDS) ] += CRGB::White;
-  }
-}
 
 void confetti() 
 {
