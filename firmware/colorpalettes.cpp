@@ -5,7 +5,7 @@
 #include "colorutils.h"
 #include "colorpalettes.h"
 
-FASTLED_USING_NAMESPACE
+FASTLED_NAMESPACE_BEGIN
 
 // Workaround for http://gcc.gnu.org/bugzilla/show_bug.cgi?id=34734
 #ifdef FASTLED_AVR
@@ -163,4 +163,7 @@ extern const TProgmemRGBPalette16 HeatColors_p PROGMEM =
     0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF
 };
  
+FASTLED_NAMESPACE_END
+
 #endif
+
