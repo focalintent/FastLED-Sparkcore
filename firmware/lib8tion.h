@@ -1869,7 +1869,7 @@ typedef q<uint16_t, 12,4> q124;
 #if (defined(ARDUINO) || defined(SPARK)) && !defined(USE_GET_MILLISECOND_TIMER)
 // Forward declaration of Arduino function 'millis'.
 // uint32_t millis();
-#define GET_MILLIS millis
+#define GET_MILLIS ::millis
 #else
 uint32_t get_millisecond_timer();
 #define GET_MILLIS get_millisecond_timer
