@@ -6,6 +6,10 @@
 volatile uint32_t fuckit;
 #endif
 
+#if defined(ARDUINO) || defined(SPARK)
+extern uint32_t millis();
+#endif
+
 FASTLED_NAMESPACE_BEGIN
 
 void *pSmartMatrix = NULL;
