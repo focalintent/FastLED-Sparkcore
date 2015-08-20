@@ -59,6 +59,30 @@ typedef enum { FORWARD_HUES, BACKWARD_HUES, SHORTEST_HUES, LONGEST_HUES } TGradi
 
 #define saccum87 int16_t
 
+/// fill_gradient - fill an array of colors with a smooth HSV gradient
+/// between two specified HSV colors.
+/// Since 'hue' is a value around a color wheel,
+/// there are always two ways to sweep from one hue
+/// to another.
+/// This function lets you specify which way you want
+/// the hue gradient to sweep around the color wheel:
+///
+///     FORWARD_HUES: hue always goes clockwise
+///     BACKWARD_HUES: hue always goes counter-clockwise
+///     SHORTEST_HUES: hue goes whichever way is shortest
+///     LONGEST_HUES: hue goes whichever way is longest
+///
+/// The default is SHORTEST_HUES, as this is nearly
+/// always what is wanted.
+///
+/// fill_gradient can write the gradient colors EITHER
+///     (1) into an array of CRGBs (e.g., into leds[] array, or an RGB Palette)
+///   OR
+///     (2) into an array of CHSVs (e.g. an HSV Palette).
+///
+///   In the case of writing into a CRGB array, the gradient is
+///   computed in HSV space, and then HSV values are converted to RGB
+///   as they're written into the RGB array.
 template <typename T>
 void fill_gradient( T* targetArray,
                     uint16_t startpos, CHSV startcolor,
@@ -69,10 +93,10 @@ void fill_gradient( T* targetArray,
     if( endpos < startpos ) {
         uint16_t t = endpos;
         CHSV tc = endcolor;
-        startpos = t;
-        startcolor = tc;
         endcolor = startcolor;
         endpos = startpos;
+        startpos = t;
+        startcolor = tc;
     }
 
     // If we're fading toward black (val=0) or white (sat=0),
@@ -368,9 +392,29 @@ typedef uint32_t TProgmemRGBPalette16[16];
 typedef uint32_t TProgmemHSVPalette16[16];
 #define TProgmemPalette16 TProgmemRGBPalette16
 
+typedef const uint8_t TProgmemRGBGradientPalette_byte ;
+typedef const TProgmemRGBGradientPalette_byte *TProgmemRGBGradientPalette_bytes;
+typedef TProgmemRGBGradientPalette_bytes TProgmemRGBGradientPalettePtr;
+typedef union {
+    struct {
+        uint8_t index;
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+    };
+    uint32_t dword;
+    uint8_t  bytes[4];
+} TRGBGradientPaletteEntryUnion;
+
+typedef uint8_t TDynamicRGBGradientPalette_byte ;
+typedef const TDynamicRGBGradientPalette_byte *TDynamicRGBGradientPalette_bytes;
+typedef TDynamicRGBGradientPalette_bytes TDynamicRGBGradientPalettePtr;
+
+
 // Convert a 16-entry palette to a 256-entry palette
 void UpscalePalette(const struct CRGBPalette16& srcpal16, struct CRGBPalette256& destpal256);
 void UpscalePalette(const struct CHSVPalette16& srcpal16, struct CHSVPalette256& destpal256);
+
 
 class CHSVPalette16 {
 public:
@@ -657,6 +701,118 @@ public:
     }
 
 
+    // Gradient palettes are loaded into CRGB16Palettes in such a way
+    // that, if possible, every color represented in the gradient palette
+    // is also represented in the CRGBPalette16.
+    // For example, consider a gradient palette that is all black except
+    // for a single, one-element-wide (1/256th!) spike of red in the middle:
+    //     0,   0,0,0
+    //   124,   0,0,0
+    //   125, 255,0,0  // one 1/256th-palette-wide red stripe
+    //   126,   0,0,0
+    //   255,   0,0,0
+    // A naive conversion of this 256-element palette to a 16-element palette
+    // might accidentally completely eliminate the red spike, rendering the
+    // palette completely black.
+    // However, the conversions provided here would attempt to include a
+    // the red stripe in the output, more-or-less as faithfully as possible.
+    // So in this case, the resulting CRGBPalette16 palette would have a red
+    // stripe in the middle which was 1/16th of a palette wide -- the
+    // narrowest possible in a CRGBPalette16.
+    // This means that the relative width of stripes in a CRGBPalette16
+    // will be, by definition, different from the widths in the gradient
+    // palette.  This code attempts to preserve "all the colors", rather than
+    // the exact stripe widths at the expense of dropping some colors.
+    CRGBPalette16( TProgmemRGBGradientPalette_bytes progpal )
+    {
+        *this = progpal;
+    }
+    CRGBPalette16& operator=( TProgmemRGBGradientPalette_bytes progpal )
+    {
+        TRGBGradientPaletteEntryUnion* progent = (TRGBGradientPaletteEntryUnion*)(progpal);
+        TRGBGradientPaletteEntryUnion u;
+
+        // Count entries
+        uint8_t count = 0;
+        do {
+            u.dword = pgm_read_dword_near(progent + count);
+            count++;;
+        } while ( u.index != 255);
+
+        int8_t lastSlotUsed = -1;
+
+        u.dword = pgm_read_dword_near( progent);
+        CRGB rgbstart( u.r, u.g, u.b);
+
+        int indexstart = 0;
+        uint8_t istart8 = 0;
+        uint8_t iend8 = 0;
+        while( indexstart < 255) {
+            progent++;
+            u.dword = pgm_read_dword_near( progent);
+            int indexend  = u.index;
+            CRGB rgbend( u.r, u.g, u.b);
+            istart8 = indexstart / 16;
+            iend8   = indexend   / 16;
+            if( count < 16) {
+                if( (istart8 <= lastSlotUsed) && (lastSlotUsed < 15)) {
+                    istart8 = lastSlotUsed + 1;
+                    if( iend8 < istart8) {
+                        iend8 = istart8;
+                    }
+                }
+                lastSlotUsed = iend8;
+            }
+            fill_gradient_RGB( &(entries[0]), istart8, rgbstart, iend8, rgbend);
+            indexstart = indexend;
+            rgbstart = rgbend;
+        }
+        return *this;
+    }
+    CRGBPalette16& loadDynamicGradientPalette( TDynamicRGBGradientPalette_bytes gpal )
+    {
+        TRGBGradientPaletteEntryUnion* ent = (TRGBGradientPaletteEntryUnion*)(gpal);
+        TRGBGradientPaletteEntryUnion u;
+
+        // Count entries
+        uint8_t count = 0;
+        do {
+            u = *(ent + count);
+            count++;;
+        } while ( u.index != 255);
+
+        int8_t lastSlotUsed = -1;
+
+
+        u = *ent;
+        CRGB rgbstart( u.r, u.g, u.b);
+
+        int indexstart = 0;
+        uint8_t istart8 = 0;
+        uint8_t iend8 = 0;
+        while( indexstart < 255) {
+            ent++;
+            u = *ent;
+            int indexend  = u.index;
+            CRGB rgbend( u.r, u.g, u.b);
+            istart8 = indexstart / 16;
+            iend8   = indexend   / 16;
+            if( count < 16) {
+                if( (istart8 <= lastSlotUsed) && (lastSlotUsed < 15)) {
+                    istart8 = lastSlotUsed + 1;
+                    if( iend8 < istart8) {
+                        iend8 = istart8;
+                    }
+                }
+                lastSlotUsed = iend8;
+            }
+            fill_gradient_RGB( &(entries[0]), istart8, rgbstart, iend8, rgbend);
+            indexstart = indexend;
+            rgbstart = rgbend;
+        }
+        return *this;
+    }
+
 };
 
 class CRGBPalette256 {
@@ -776,22 +932,64 @@ public:
         fill_gradient_RGB( &(entries[0]), 256, c1, c2, c3, c4);
     }
 
+    CRGBPalette256( TProgmemRGBGradientPalette_bytes progpal )
+    {
+        *this = progpal;
+    }
+    CRGBPalette256& operator=( TProgmemRGBGradientPalette_bytes progpal )
+    {
+        TRGBGradientPaletteEntryUnion* progent = (TRGBGradientPaletteEntryUnion*)(progpal);
+        TRGBGradientPaletteEntryUnion u;
+        u.dword = pgm_read_dword_near( progent);
+        CRGB rgbstart( u.r, u.g, u.b);
+
+        int indexstart = 0;
+        while( indexstart < 255) {
+            progent++;
+            u.dword = pgm_read_dword_near( progent);
+            int indexend  = u.index;
+            CRGB rgbend( u.r, u.g, u.b);
+            fill_gradient_RGB( &(entries[0]), indexstart, rgbstart, indexend, rgbend);
+            indexstart = indexend;
+            rgbstart = rgbend;
+        }
+        return *this;
+    }
+    CRGBPalette256& loadDynamicGradientPalette( TDynamicRGBGradientPalette_bytes gpal )
+    {
+        TRGBGradientPaletteEntryUnion* ent = (TRGBGradientPaletteEntryUnion*)(gpal);
+        TRGBGradientPaletteEntryUnion u;
+        u = *ent;
+        CRGB rgbstart( u.r, u.g, u.b);
+
+        int indexstart = 0;
+        while( indexstart < 255) {
+            ent++;
+            u = *ent;
+            int indexend  = u.index;
+            CRGB rgbend( u.r, u.g, u.b);
+            fill_gradient_RGB( &(entries[0]), indexstart, rgbstart, indexend, rgbend);
+            indexstart = indexend;
+            rgbstart = rgbend;
+        }
+        return *this;
+    }
 };
 
 
 
 
-typedef enum { NOBLEND=0, BLEND=1 } TBlendType;
+typedef enum { NOBLEND=0, LINEARBLEND=1 } TBlendType;
 
 CRGB ColorFromPalette( const CRGBPalette16& pal,
                       uint8_t index,
                       uint8_t brightness=255,
-                      TBlendType blendType=BLEND);
+                      TBlendType blendType=LINEARBLEND);
 
 CRGB ColorFromPalette( const TProgmemRGBPalette16& pal,
                        uint8_t index,
                        uint8_t brightness=255,
-                       TBlendType blendType=BLEND);
+                       TBlendType blendType=LINEARBLEND);
 
 CRGB ColorFromPalette( const CRGBPalette256& pal,
                        uint8_t index,
@@ -801,7 +999,7 @@ CRGB ColorFromPalette( const CRGBPalette256& pal,
 CHSV ColorFromPalette( const CHSVPalette16& pal,
                        uint8_t index,
                        uint8_t brightness=255,
-                       TBlendType blendType=BLEND);
+                       TBlendType blendType=LINEARBLEND);
 
 CHSV ColorFromPalette( const CHSVPalette256& pal,
                        uint8_t index,
@@ -828,7 +1026,7 @@ void map_data_into_colors_through_palette(
 	const PALETTE& pal,
 	uint8_t brightness=255,
 	uint8_t opacity=255,
-	TBlendType blendType=BLEND)
+	TBlendType blendType=LINEARBLEND)
 {
 	for( uint16_t i = 0; i < dataCount; i++) {
 		uint8_t d = dataArray[i];
@@ -878,6 +1076,82 @@ void map_data_into_colors_through_palette(
 void nblendPaletteTowardPalette( CRGBPalette16& currentPalette,
                                 CRGBPalette16& targetPalette,
                                 uint8_t maxChanges=24);
+
+
+
+
+//  You can also define a static RGB palette very compactly in terms of a series
+//  of connected color gradients.
+//  For example, if you want the first 3/4ths of the palette to be a slow
+//  gradient ramping from black to red, and then the remaining 1/4 of the
+//  palette to be a quicker ramp to white, you specify just three points: the
+//  starting black point (at index 0), the red midpoint (at index 192),
+//  and the final white point (at index 255).  It looks like this:
+//
+//    index:  0                                    192          255
+//            |----------r-r-r-rrrrrrrrRrRrRrRrRRRR-|-RRWRWWRWWW-|
+//    color: (0,0,0)                           (255,0,0)    (255,255,255)
+//
+//  Here's how you'd define that gradient palette:
+//
+//    DEFINE_GRADIENT_PALETTE( black_to_red_to_white_p ) {
+//          0,      0,  0,  0,    /* at index 0, black(0,0,0) */
+//        192,    255,  0,  0,    /* at index 192, red(255,0,0) */
+//        255,    255,255,255    /* at index 255, white(255,255,255) */
+//    };
+//
+//  This format is designed for compact storage.  The example palette here
+//  takes up just 12 bytes of PROGMEM (flash) storage, and zero bytes
+//  of SRAM when not currently in use.
+//
+//  To use one of these gradient palettes, simply assign it into a
+//  CRGBPalette16 or a CRGBPalette256, like this:
+//
+//    CRGBPalette16 pal = black_to_red_to_white_p;
+//
+//  When the assignment is made, the gradients are expanded out into
+//  either 16 or 256 palette entries, depending on the kind of palette
+//  object they're assigned to.
+//
+//  IMPORTANT NOTES & CAVEATS:
+//
+//  - The last 'index' position MUST BE 255!  Failure to end with
+//    index 255 will result in program hangs or crashes.
+//
+//  - At this point, these gradient palette definitions MUST BE
+//    stored in PROGMEM on AVR-based Arduinos.  If you use the
+//    DEFINE_GRADIENT_PALETTE macro, this is taken care of automatically.
+//
+
+#define DEFINE_GRADIENT_PALETTE(X) \
+  extern const TProgmemRGBGradientPalette_byte X[] PROGMEM =
+
+#define DECLARE_GRADIENT_PALETTE(X) \
+  extern const TProgmemRGBGradientPalette_byte X[] PROGMEM
+
+
+// Functions to apply gamma adjustments, either:
+// - a single gamma adjustment to a single scalar value,
+// - a single gamma adjustment to each channel of a CRGB color, or
+// - different gamma adjustments for each channel of a CRFB color.
+//
+// Note that the gamma is specified as a traditional floating point value
+// e.g., "2.5", and as such these functions should not be called in
+// your innermost pixel loops, or in animations that are extremely
+// low on program storage space.  Nevertheless, if you need these
+// functions, here they are.
+//
+// Furthermore, bear in mind that CRGB leds have only eight bits
+// per channel of color resolution, and that very small, subtle shadings
+// may not be visible.
+uint8_t applyGamma_video( uint8_t brightness, float gamma);
+CRGB    applyGamma_video( const CRGB& orig, float gamma);
+CRGB    applyGamma_video( const CRGB& orig, float gammaR, float gammaG, float gammaB);
+// The "n" versions below modify their arguments in-place.
+CRGB&  napplyGamma_video( CRGB& rgb, float gamma);
+CRGB&  napplyGamma_video( CRGB& rgb, float gammaR, float gammaG, float gammaB);
+void   napplyGamma_video( CRGB* rgbarray, uint16_t count, float gamma);
+void   napplyGamma_video( CRGB* rgbarray, uint16_t count, float gammaR, float gammaG, float gammaB);
 
 
 FASTLED_NAMESPACE_END

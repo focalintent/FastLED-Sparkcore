@@ -486,13 +486,13 @@ void hsv2rgb_spectrum( const struct CHSV* phsv, struct CRGB * prgb, int numLeds)
 // See extended notes in the .h file.
 CHSV rgb2hsv_approximate( const CRGB& rgb)
 {
-    byte r = rgb.r;
-    byte g = rgb.g;
-    byte b = rgb.b;
-    byte h, s, v;
+    uint8_t r = rgb.r;
+    uint8_t g = rgb.g;
+    uint8_t b = rgb.b;
+    uint8_t h, s, v;
 
     // find desaturation
-    byte desat = 255;
+    uint8_t desat = 255;
     if( r < desat) desat = r;
     if( g < desat) desat = g;
     if( b < desat) desat = b;
@@ -511,7 +511,7 @@ CHSV rgb2hsv_approximate( const CRGB& rgb)
 
     if( total == 0) {
         // we pick hue zero for no special reason
-        return CHSV( 0, 0, 0);
+        return CHSV( 0, 0, desat);
     }
 
     // since this wasn't a pure shade of gray,
@@ -538,7 +538,17 @@ CHSV rgb2hsv_approximate( const CRGB& rgb)
 
     // saturation is opposite of desaturation
     s = 255 - desat;
-    if( v != 255) s = (s * 256) / v;
+    if( v != 255) {
+        // this part could probably use refinement/rethinking,
+        // (but it doesn't overflow & wrap anymore)
+        uint16_t s16;
+        s16 = (s * 256) / v;
+        if( s16 < 256) {
+            s = s16;
+        } else {
+            s = 255; // clamp to prevent overflow
+        }
+    }
 
     // undo 'dimming' of saturation
     if( s != 255 ) s = 255 - sqrt16( (255-s) * 256);
@@ -547,7 +557,7 @@ CHSV rgb2hsv_approximate( const CRGB& rgb)
 
     // start with which channel is highest
     // (ties don't matter)
-    byte highest = r;
+    uint8_t highest = r;
     if( g > highest) highest = g;
     if( b > highest) highest = b;
 
@@ -557,7 +567,7 @@ CHSV rgb2hsv_approximate( const CRGB& rgb)
         if( g == 0 ) {
             // if green is zero, we're in Purple/Pink-Red
             h = (HUE_PURPLE + HUE_PINK) / 2;
-            h += scale8( r - 128, FIXFRAC8(48,128));
+            h += scale8( qsub8(r, 128), FIXFRAC8(48,128));
         } else if ( (r - g) > g) {
             // if R-G > G then we're in Red-Orange
             h = HUE_RED;
@@ -582,7 +592,7 @@ CHSV rgb2hsv_approximate( const CRGB& rgb)
                 h += scale8( b, FIXFRAC8(32,85));
             } else {
                 h = HUE_AQUA;
-                h += scale8( b - 85, FIXFRAC8(8,42));
+                h += scale8( qsub8(b, 85), FIXFRAC8(8,42));
             }
         }
 
@@ -592,7 +602,7 @@ CHSV rgb2hsv_approximate( const CRGB& rgb)
         if( r == 0) {
             // if red is zero, we're in Aqua/Blue-Blue
             h = HUE_AQUA + ((HUE_BLUE - HUE_AQUA) / 4);
-            h += scale8( b - 128, FIXFRAC8(24,128));
+            h += scale8( qsub8(b, 128), FIXFRAC8(24,128));
         } else if ( (b-r) > r) {
             // B-R > R, we're in Blue-Purple
             h = HUE_BLUE;
@@ -600,7 +610,7 @@ CHSV rgb2hsv_approximate( const CRGB& rgb)
         } else {
             // B-R < R, we're in Purple-Pink
             h = HUE_PURPLE;
-            h += scale8( r - 85, FIXFRAC8(32,85));
+            h += scale8( qsub8(r, 85), FIXFRAC8(32,85));
         }
     }
 

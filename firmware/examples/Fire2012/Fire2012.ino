@@ -20,7 +20,7 @@ void setup() {
 void loop()
 {
   // Add entropy to random number generator; we use a lot of it.
-  random16_add_entropy( random());
+  random16_add_entropy( random(256));
 
   Fire2012(); // run simulation frame
   
