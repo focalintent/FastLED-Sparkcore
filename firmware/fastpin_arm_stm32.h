@@ -34,9 +34,14 @@ public:
   inline static void setOutput() { pinMode(PIN, OUTPUT); } // TODO: perform MUX config { _PDDR::r() |= _MASK; }
   inline static void setInput() { pinMode(PIN, INPUT); } // TODO: preform MUX config { _PDDR::r() &= ~_MASK; }
 
+#if defined(STM32F2XX)
+  inline static void hi() __attribute__ ((always_inline)) { _GPIO::r()->BSRRL = _MASK; }
+  inline static void lo() __attribute__ ((always_inline)) { _GPIO::r()->BSRRH = _MASK; }
+#else
   inline static void hi() __attribute__ ((always_inline)) { _GPIO::r()->BSRR = _MASK; }
   inline static void lo() __attribute__ ((always_inline)) { _GPIO::r()->BRR = _MASK; }
   // inline static void lo() __attribute__ ((always_inline)) { _GPIO::r()->BSRR = (_MASK<<16); }
+#endif
   inline static void set(register port_t val) __attribute__ ((always_inline)) { _GPIO::r()->ODR = val; }
 
   inline static void strobe() __attribute__ ((always_inline)) { toggle(); toggle(); }
@@ -50,8 +55,13 @@ public:
   inline static port_t hival() __attribute__ ((always_inline)) { return _GPIO::r()->ODR | _MASK; }
   inline static port_t loval() __attribute__ ((always_inline)) { return _GPIO::r()->ODR & ~_MASK; }
   inline static port_ptr_t port() __attribute__ ((always_inline)) { return &_GPIO::r()->ODR; }
+#if defined(STM32F2XX)
+  inline static port_ptr_t sport() __attribute__ ((always_inline)) { return &_GPIO::r()->BSRRL; }
+  inline static port_ptr_t cport() __attribute__ ((always_inline)) { return &_GPIO::r()->BSRRH; }
+#else
   inline static port_ptr_t sport() __attribute__ ((always_inline)) { return &_GPIO::r()->BSRR; }
   inline static port_ptr_t cport() __attribute__ ((always_inline)) { return &_GPIO::r()->BRR; }
+#endif
   inline static port_t mask() __attribute__ ((always_inline)) { return _MASK; }
 };
 
@@ -67,7 +77,29 @@ public:
 
 _IO32(A); _IO32(B); _IO32(C); _IO32(D); _IO32(E); _IO32(F); _IO32(G);
 
+#if defined(STM32F2XX)
+#define MAX_PIN 19
+_DEFPIN_ARM(0, 7, B);
+_DEFPIN_ARM(1, 6, B);
+_DEFPIN_ARM(2, 5, B);
+_DEFPIN_ARM(3, 4, B);
+_DEFPIN_ARM(4, 3, B);
+_DEFPIN_ARM(5, 15, A);
+_DEFPIN_ARM(6, 14, A);
+_DEFPIN_ARM(7, 13, A);
+_DEFPIN_ARM(10, 5, C);
+_DEFPIN_ARM(11, 3, C);
+_DEFPIN_ARM(12, 2, C);
+_DEFPIN_ARM(13, 5, A);
+_DEFPIN_ARM(14, 6, A);
+_DEFPIN_ARM(15, 7, A);
+_DEFPIN_ARM(16, 4, A);
+_DEFPIN_ARM(17, 0, A);
+_DEFPIN_ARM(18, 10, A);
+_DEFPIN_ARM(19, 9, A);
+_DEFPIN_ARM(20, 7, C);
 
+#else
 #define MAX_PIN 19
 _DEFPIN_ARM(0, 7, B);
 _DEFPIN_ARM(1, 6, B);
@@ -90,6 +122,7 @@ _DEFPIN_ARM(17, 1, B);
 _DEFPIN_ARM(18, 3, A);
 _DEFPIN_ARM(19, 2, A);
 
+#endif
 
 #define SPI_DATA 15
 #define SPI_CLOCK 13

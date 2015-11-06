@@ -3,6 +3,6 @@
   "author": "Daniel Garcia, Mark Kriegsman",
   "license": "MIT",
   "version": "3.1.4",
-  "description": "A packaging of FastLED 3.1 for sparkcore",
+  "description": "A packaging of FastLED 3.1 for sparkcore and photon",
   "namespace": "NSFastLED"
 }
