@@ -111,20 +111,18 @@ private:
 	}
 
 public:
-#if defined(STM32F2XX)
-  #define MIN_DELAY  1 // delaycycles<2>(); // delaycycles<24>();
-#else
-  #define MIN_DELAY 0 // delaycycles<8>();
-#endif
+
+	// We want to make sure that the clock pulse is held high for a nininum of 35ns.
+	#define MIN_DELAY (NS(35) - 3)
 
   #define CLOCK_HI_DELAY delaycycles<MIN_DELAY>(); delaycycles<(((SPI_SPEED-6) / 2) - MIN_DELAY)>();
-	#define CLOCK_LO_DELAY delaycycles<(((SPI_SPEED-4) / 4) - MIN_DELAY)>();
+	#define CLOCK_LO_DELAY delaycycles<(((SPI_SPEED-6) / 4))>();
 
 	// write the BIT'th bit out via spi, setting the data pin then strobing the clcok
 	template <uint8_t BIT> __attribute__((always_inline, hot)) inline static void writeBit(uint8_t b) {
 		//cli();
 		if(b & (1 << BIT)) {
-			FastPin<DATA_PIN>::hi(); ;
+			FastPin<DATA_PIN>::hi();
 			FastPin<CLOCK_PIN>::hi(); CLOCK_HI_DELAY;
 			FastPin<CLOCK_PIN>::lo(); CLOCK_LO_DELAY;
 		} else {
