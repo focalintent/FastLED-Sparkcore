@@ -37,6 +37,11 @@ public:
 
 // predeclaration to not upset the compiler
 template<int CYCLES> inline void delaycycles();
+template<int CYCLES> inline void delaycycles_min1() {
+  delaycycles<1>();
+  delaycycles<CYCLES-1>();
+}
+
 
 // TODO: ARM version of _delaycycles_
 
@@ -59,7 +64,7 @@ template<int LOOP, int PAD> inline void _delaycycles_AVR() {
 }
 
 template<int CYCLES> __attribute__((always_inline)) inline void delaycycles() { 
-	_delaycycles_AVR<CYCLES / 3, CYCLES % 3>();	
+	if(CYCLES > 0) _delaycycles_AVR<CYCLES / 3, CYCLES % 3>();	
 }
 #else
 // template<int LOOP, int PAD> inline void _delaycycles_ARM() { 
@@ -80,12 +85,16 @@ template<int CYCLES> __attribute__((always_inline)) inline void delaycycles() {
 
 template<int CYCLES> __attribute__((always_inline)) inline void delaycycles() { 
 	// _delaycycles_ARM<CYCLES / 3, CYCLES % 3>();
-	NOP; delaycycles<CYCLES-1>();
+	if(CYCLES > 0) { NOP; delaycycles<CYCLES-1>(); }
 }
 #endif
 
 // pre-instantiations for values small enough to not need the loop, as well as sanity holders
 // for some negative values.
+template<> __attribute__((always_inline)) inline void delaycycles<-10>() {}
+template<> __attribute__((always_inline)) inline void delaycycles<-9>() {}
+template<> __attribute__((always_inline)) inline void delaycycles<-8>() {}
+template<> __attribute__((always_inline)) inline void delaycycles<-7>() {}
 template<> __attribute__((always_inline)) inline void delaycycles<-6>() {}
 template<> __attribute__((always_inline)) inline void delaycycles<-5>() {}
 template<> __attribute__((always_inline)) inline void delaycycles<-4>() {}
