@@ -32,8 +32,8 @@
 #define pgm_read_dword_near(addr) pgm_read_dword(addr)
 
 // data type defs
-typedef volatile       uint8_t RoReg; /**< Read only 8-bit register (volatile const unsigned int) */
-typedef volatile       uint8_t RwReg; /**< Read-Write 8-bit register (volatile unsigned int) */
+typedef volatile       uint8_t RoRg; /**< Read only 8-bit register (volatile const unsigned int) */
+typedef volatile       uint8_t RwRg; /**< Read-Write 8-bit register (volatile unsigned int) */
 
 #define FASTLED_NO_PINMAP
 
